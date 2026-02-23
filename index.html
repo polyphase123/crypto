@@ -1,0 +1,1995 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAA Budget Blockchain Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #6366f1;
+            --accent: #f43f5e;
+            --success: #10b981;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --glass: rgba(255, 255, 255, 0.7);
+            --glow: 0 0 20px rgba(37, 99, 235, 0.2);
+            --risk-low: #10b981;
+            --risk-mid: #f59e0b;
+            --risk-high: #ef4444;
+        }
+
+        [data-theme="dark"] {
+            --background: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --glass: rgba(15, 23, 42, 0.8);
+            --glow: 0 0 25px rgba(99, 102, 241, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Background Decorations */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        header {
+            padding: 2rem 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--glow);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .logo-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-badge {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem 4rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-top: 0.5rem;
+            display: block;
+        }
+
+        .network-meta {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Analytics Chart */
+        .analytics-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: white;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 100%;
+            margin-top: 1rem;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: var(--primary);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s ease;
+            position: relative;
+        }
+
+        .chart-bar:hover::after {
+            content: attr(data-label);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            font-weight: 700;
+            white-space: nowrap;
+            background: var(--text-main);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Search & Filter Styling */
+        .filter-bar {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        #ledger-search {
+            background: #f8fafc;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border-radius: 10px;
+        }
+
+        /* Blockchain Section */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .blockchain-container {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            padding: 1rem 0 2rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .blockchain-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .blockchain-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .block {
+            min-width: 320px;
+            background: white;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            flex-shrink: 0;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            animation: slideIn 0.5s ease-out;
+            will-change: transform, box-shadow;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .block:hover {
+            border-color: var(--primary);
+            box-shadow: 0 15px 25px -10px rgba(37, 99, 235, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .block.latest-block {
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.05);
+            animation: pulse-border 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-border {
+
+            0%,
+            100% {
+                border-color: var(--primary);
+                opacity: 1;
+            }
+
+            50% {
+                border-color: var(--secondary);
+                opacity: 0.9;
+            }
+        }
+
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .block-number {
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .block-ts {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .hash-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            font-weight: 700;
+        }
+
+        .hash-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            word-break: break-all;
+            background: #f1f5f9;
+            padding: 0.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .block-transactions {
+            margin-top: 1rem;
+        }
+
+        .tx-item {
+            font-size: 0.85rem;
+            padding: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f8fafc;
+        }
+
+        .tx-dept {
+            font-weight: 600;
+        }
+
+        .tx-amount {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .block-connector {
+            min-width: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            opacity: 0.3;
+            font-size: 1.5rem;
+            animation: flow 2s linear infinite;
+        }
+
+        @keyframes flow {
+            0% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            100% {
+                transform: translateX(-5px);
+            }
+        }
+
+        /* Action Panel */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 32px;
+            padding: 2rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
+
+            /* Only apply blur on capable devices */
+            @supports (backdrop-filter: blur(12px)) {
+                backdrop-filter: blur(12px);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            outline: none;
+            transition: border-color 0.2s;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Ledger Table */
+        .ledger-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .ledger-tx {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 0.75rem;
+            border: 1px solid var(--border);
+        }
+
+        .tx-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+
+        .tx-type-alloc {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .tx-type-disb {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .tx-type-audit {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .tx-info h4 {
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .tx-info p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .tx-value {
+            margin-left: auto;
+            text-align: right;
+            font-weight: 700;
+        }
+
+        /* Network Node Map */
+        .node-map {
+            display: flex;
+            justify-content: space-around;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0.4;
+            transition: all 0.3s;
+        }
+
+        .node.active {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .node-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        /* Risk Badge */
+        .risk-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 800;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        /* Budget Gauge */
+        .gauge-container {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .pulse-box {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 20px;
+            animation: pulse-spin 1.5s infinite ease-in-out;
+            will-change: transform;
+        }
+
+        @keyframes pulse-spin {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1) rotate(180deg);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1) rotate(360deg);
+                opacity: 1;
+            }
+        }
+
+        /* Corruption Sentinel Dashboard */
+        .sentinel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .sentinel-card {
+            background: rgba(244, 63, 94, 0.05);
+            border: 1px solid rgba(244, 63, 94, 0.1);
+            padding: 1rem;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sentinel-label {
+            font-size: 0.7rem;
+            color: var(--accent);
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .sentinel-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        /* Geotag & Metadata */
+        .meta-tag {
+            font-size: 0.6rem;
+            font-family: 'JetBrains Mono';
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Whistleblower Portal */
+        .whistleblower-btn {
+            background: var(--accent);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+            transition: all 0.3s;
+        }
+
+        .whistleblower-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4);
+        }
+
+        /* Alert Banner */
+        .sentinel-alert {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--accent);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-width: 300px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .mission-grid {
+                grid-template-columns: 1fr !important;
+                gap: 2rem !important;
+            }
+
+            .mission-visual {
+                display: none;
+            }
+        }
+
+        /* Sentinel Notifications */
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .fraud-alert {
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-left: 6px solid #be123c;
+            padding: 1.25rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 350px;
+            max-width: 450px;
+            animation: slideInRight 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+        }
+
+        .fraud-alert::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #be123c;
+            animation: progress 5s linear forwards;
+        }
+
+        @keyframes progress {
+            from {
+                width: 100%;
+            }
+
+            to {
+                width: 0%;
+            }
+        }
+
+        .fraud-alert-icon {
+            width: 50px;
+            height: 50px;
+            background: #be123c;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            animation: pulse-alert 1s infinite alternate;
+        }
+
+        @keyframes pulse-alert {
+            from {
+                transform: scale(1);
+                box-shadow: 0 0 0px rgba(190, 18, 60, 0);
+            }
+
+            to {
+                transform: scale(1.1);
+                box-shadow: 0 0 15px rgba(190, 18, 60, 0.5);
+            }
+        }
+
+        .fraud-alert h4 {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #be123c;
+            margin-bottom: 4px;
+        }
+
+        .fraud-alert p {
+            font-size: 0.8rem;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+
+        /* Block Lockdown Effect */
+        .block.lockdown {
+            filter: grayscale(0.5);
+            border: 2px solid #be123c !important;
+            background: repeating-linear-gradient(45deg, #fff, #fff 10px, #fff1f2 10px, #fff1f2 20px) !important;
+        }
+
+        .lockdown-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(190, 18, 60, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            flex-direction: column;
+            pointer-events: none;
+            backdrop-filter: blur(1px);
+        }
+
+        .lockdown-badge {
+            background: #be123c;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 0 10px 15px -3px rgba(190, 18, 60, 0.4);
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 1.5rem 1rem;
+            }
+
+            .block {
+                min-width: 280px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .fraud-alert {
+                min-width: 90%;
+                right: 5%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+            </div>
+            <div>
+                <h1>BUDGET CHAIN</h1>
+                <p style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; letter-spacing: 1px;">NATIONAL
+                    BUDGET LEDGER</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <button class="whistleblower-btn" style="background: var(--success);" onclick="toggleTraffic()"
+                id="traffic-btn">
+                ⚡ START AUTO-TRAFFIC
+            </button>
+            <button class="whistleblower-btn" onclick="openWhistleblower()">
+                🛡️ WHISTLEBLOWER HOTLINE
+            </button>
+            <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">
+                <span>🌙 DARK MODE</span>
+            </button>
+            <div class="status-badge">
+                <span class="dot"></span> NODE ONLINE
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Total GAA 2025</span>
+                <span class="stat-value" id="stat-total">₱ 6.326T</span>
+                <div class="gauge-container">
+                    <div class="gauge-fill" id="total-gauge"></div>
+                </div>
+                <div class="network-meta">
+                    <span>Usage: <span id="usage-pct">0.02</span>%</span>
+                    <span>Lat: <span id="net-lat">12</span>ms</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Allocated (Blockchain)</span>
+                <span class="stat-value" id="stat-allocated" style="color: var(--primary)">₱ 1.24B</span>
+                <div class="network-meta" id="net-peers">7 Nodes Connected</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Blocks Verified</span>
+                <span class="stat-value" id="block-count">8</span>
+                <div class="network-meta">Next Block: ~4s</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Transparency Index</span>
+                <span class="stat-value" style="color: var(--success)">99.9%</span>
+                <div class="network-meta">Audit Bot: ACTIVE</div>
+            </div>
+        </div>
+
+        <div class="node-map" id="node-viz">
+            <div class="node" id="node-dbm">
+                <div class="node-icon">DBM</div><span>Finance Node</span>
+            </div>
+            <div class="node" id="node-coa">
+                <div class="node-icon">COA</div><span>Audit Node</span>
+            </div>
+            <div class="node" id="node-btr">
+                <div class="node-icon">BTr</div><span>Treasury Node</span>
+            </div>
+            <div class="node" id="node-agency">
+                <div class="node-icon">PH</div><span>Agency Node</span>
+            </div>
+        </div>
+
+        <!-- NEW: Analytics & Progress -->
+        <div class="analytics-container">
+            <div class="chart-placeholder">
+                <div class="section-header">
+                    <h3 class="section-title">Department Allocation Weight</h3>
+                </div>
+                <div class="chart-bars" id="dept-chart">
+                    <!-- Dynamic Bars -->
+                </div>
+            </div>
+            <div class="glass-panel" style="padding: 1.5rem;">
+                <h3 class="section-title" style="margin-bottom: 1rem; font-size: 1rem;">Budget Status Bot</h3>
+                <div id="status-feed"
+                    style="font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono'; height: 200px; overflow-y: auto;">
+                    <p>> Initializing Audit Trail...</p>
+                    <p>> Checking Smart Contract #GAA-2026...</p>
+                </div>
+            </div>
+        </div>
+
+        <section>
+            <div class="section-header">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <h2 class="section-title">Live Budget Chain</h2>
+                    <span
+                        style="font-size: 0.7rem; color: white; background: var(--accent); padding: 2px 8px; border-radius: 4px; font-weight: 800;">REAL-TIME</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    Scroll to see older blocks &rarr;
+                </div>
+            </div>
+            <div class="blockchain-container" id="blockchain">
+                <!-- Blocks will be injected here -->
+            </div>
+        </section>
+
+        <!-- Anti-Corruption Sentinel Shield -->
+        <div class="glass-panel" style="margin-top: 3rem; border: 2px solid rgba(244, 63, 94, 0.2);">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title" style="color: var(--accent);">Anti-Corruption Sentinel Shield</h2>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">Real-time Anomaly Detection & Asset Recovery
+                        Monitoring</p>
+                </div>
+                <div style="font-size: 0.7rem; font-weight: 800; color: var(--accent);">ACTIVE PROTECTION ON</div>
+            </div>
+            <div class="sentinel-grid">
+                <div class="sentinel-card">
+                    <span class="sentinel-label">Anomalies Detected</span>
+                    <span class="sentinel-value" id="sentinel-anomalies">0</span>
+                    <p style="font-size: 0.6rem; color: var(--text-muted);">Procurement Price Variation Check</p>
+                </div>
+                <div class="sentinel-card"
+                    style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.1);">
+                    <span class="sentinel-label" style="color: var(--success);">Asset Recovery</span>
+                    <span class="sentinel-value" id="sentinel-recovery">₱ 0.00</span>
+                    <p style="font-size: 0.6rem; color: var(--text-muted);">Clawed-back Irregular Funds</p>
+                </div>
+                <div class="sentinel-card"
+                    style="background: rgba(37, 99, 235, 0.05); border-color: rgba(37, 99, 235, 0.1);">
+                    <span class="sentinel-label" style="color: var(--primary);">Integrity Score</span>
+                    <span class="sentinel-value" id="sentinel-integrity">98%</span>
+                    <p style="font-size: 0.6rem; color: var(--text-muted);">Community Watchdog Endorsement Rate</p>
+                </div>
+            </div>
+            <!-- NEW: Forensic Interception Log -->
+            <div id="forensic-log"
+                style="margin-top: 1.5rem; font-size: 0.65rem; color: #f43f5e; font-family: 'JetBrains Mono'; height: 80px; overflow-y: auto; border-top: 1px dashed rgba(244, 63, 94, 0.2); padding-top: 1rem; border-radius: 4px;">
+                <p style="color: #64748b;">[SENTINEL] Awaiting forensic signals...</p>
+            </div>
+        </div>
+
+        <div class="grid-layout">
+            <div class="glass-panel">
+                <h2 class="section-title" style="margin-bottom: 1.5rem;">Initialize Transaction</h2>
+                <form id="tx-form">
+                    <div class="form-group">
+                        <label>Department / Office</label>
+                        <select id="dept-select">
+                            <optgroup label="Executive Departments">
+                                <option value="DA">Department of Agriculture (DA)</option>
+                                <option value="DBM">Dept. of Budget and Management (DBM)</option>
+                                <option value="DepEd">Department of Education (DepEd)</option>
+                                <option value="DOE">Department of Energy (DOE)</option>
+                                <option value="DENR">Environment & Natural Resources (DENR)</option>
+                                <option value="DOF">Department of Finance (DOF)</option>
+                                <option value="DFA">Department of Foreign Affairs (DFA)</option>
+                                <option value="DOH">Department of Health (DOH)</option>
+                                <option value="DHSUD">Human Settlements (DHSUD)</option>
+                                <option value="DILG">Interior & Local Govt (DILG)</option>
+                                <option value="DOJ">Department of Justice (DOJ)</option>
+                                <option value="DOLE">Labor & Employment (DOLE)</option>
+                                <option value="DND">National Defense (DND)</option>
+                                <option value="DPWH">Public Works & Highways (DPWH)</option>
+                                <option value="DOST">Science & Technology (DOST)</option>
+                                <option value="DSWD">Social Welfare & Dev (DSWD)</option>
+                                <option value="DOT">Department of Tourism (DOT)</option>
+                                <option value="DTI">Trade & Industry (DTI)</option>
+                                <option value="DOTr">Department of Transportation (DOTr)</option>
+                            </optgroup>
+                            <optgroup label="Constitutional & Others">
+                                <option value="COA">Commission on Audit (COA)</option>
+                                <option value="CSC">Civil Service Commission (CSC)</option>
+                                <option value="COMELEC">Commission on Elections (COMELEC)</option>
+                                <option value="OP">Office of the President (OP)</option>
+                                <option value="OVP">Office of the Vice President (OVP)</option>
+                                <option value="NEDA">NEDA</option>
+                                <option value="DICT">Information Tech (DICT)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction Type</label>
+                        <select id="type-select">
+                            <option value="Allocation">Budget Allocation</option>
+                            <option value="Disbursement">Project Disbursement</option>
+                            <option value="Audit">COA Audit Verification</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (PHP)</label>
+                        <input type="number" id="amount-input" placeholder="e.g. 50000000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Project Details / Remarks</label>
+                        <input type="text" id="remarks-input" placeholder="e.g. Laptop for Teachers Program" required>
+                    </div>
+                    <button type="submit">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                            </path>
+                        </svg>
+                        MINT BLOCK TO LEDGER
+                    </button>
+                </form>
+            </div>
+
+            <div class="glass-panel">
+                <div class="section-header" style="margin-bottom: 1.5rem;">
+                    <h2 class="section-title" style="margin:0;">Recent Activity</h2>
+                    <button onclick="exportLedger()"
+                        style="width: auto; padding: 0.5rem 1rem; font-size: 0.7rem; background: var(--text-main);">EXPORT
+                        CSV</button>
+                </div>
+                <div class="filter-bar">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input type="text" id="ledger-search" placeholder="Search transactions..." oninput="filterLedger()">
+                </div>
+                <div class="ledger-list" id="ledger-list">
+                    <!-- Activities will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Forensic Intelligence Showcase -->
+        <section class="glass-panel" style="margin-top: 3rem; background: linear-gradient(135deg, white, #f1f5f9);">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h2 class="section-title" style="font-size: 2.22rem; margin-bottom: 0.5rem;">Forensic Intelligence Suite
+                </h2>
+                <p style="color: var(--text-muted); max-width: 700px; margin: 0 auto;">Every transaction on our chain is
+                    analyzed by the Sentinel AI. Below are the key signals our system hunts for to eliminate public fund
+                    leakage.</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
+                <!-- Implemented Features -->
+                <div
+                    style="padding: 1.5rem; background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.1); border-radius: 20px;">
+                    <h4
+                        style="color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        🔄 Duplicate Project Logic</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Detects "Double Dipping" where the same
+                        infrastructure project is funded multiple times across different blocks.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.1); border-radius: 20px;">
+                    <h4
+                        style="color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        🖼️ Image Evidence Hashing</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Matches cryptographic signatures of project
+                        photos to catch agencies using recycled "completion" evidence.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.1); border-radius: 20px;">
+                    <h4
+                        style="color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        ✂️ Split-Contract Check</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Identifies large payouts broken into tiny
+                        chunks to bypass public bidding thresholds and mandatory oversight.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.1); border-radius: 20px;">
+                    <h4
+                        style="color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        📑 Vendor Watchlist</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Cross-references contractors against
+                        high-risk databases to flag projects awarded to "blacklisted" crony entities.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.1); border-radius: 20px;">
+                    <h4
+                        style="color: var(--success); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        ⚖️ AI Price Benchmark</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Flags items like laptops or school chairs
+                        priced 100%+ over the Current Market Price on the ledger.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.1); border-radius: 20px;">
+                    <h4
+                        style="color: var(--success); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        📍 GPS Geotagging</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Ensures every disbursement is tagged with
+                        valid GPS coordinates, preventing "Floating Projects" in impossible locations.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.1); border-radius: 20px;">
+                    <h4
+                        style="color: var(--success); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        🛡️ Watchdog Consensus</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Triple-blind verification by DBM, COA, and
+                        Civil Society CSOs before a block can be permanently sealed.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.1); border-radius: 20px;">
+                    <h4
+                        style="color: var(--success); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        ⚡ Sentinel Shield</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Real-time monitoring panel displaying asset
+                        recovery totals and active forensic anomaly counts.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: rgba(244, 63, 94, 0.05); border: 1px solid rgba(244, 63, 94, 0.1); border-radius: 20px;">
+                    <h4
+                        style="color: var(--accent); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        🔒 Multi-Sig Smart Lock</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Automated fund-freeze for releases over ₱1
+                        Billion until multiple agency keys authorize the disbursement.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: rgba(244, 63, 94, 0.05); border: 1px solid rgba(244, 63, 94, 0.1); border-radius: 20px;">
+                    <h4
+                        style="color: var(--accent); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        🔗 Immutable Hashing</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Ensures that once a budget allocation is
+                        recorded, it can never be deleted, hidden, or retrospectively edited.</p>
+                </div>
+
+                <!-- Conceptual/Roadmap Features -->
+                <div
+                    style="padding: 1.5rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 20px; opacity: 0.7;">
+                    <h4 style="color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">⏳
+                        Time-Disbursement Sync</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Flags 100% fund releases that occur before
+                        the project's simulated start or milestone date.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 20px; opacity: 0.7;">
+                    <h4 style="color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">🗳️
+                        Election Season Monitor</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Alerts for abnormal spending spikes in
+                        "Social Welfare" or "Infrastructure" within 90 days of an election.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 20px; opacity: 0.7;">
+                    <h4 style="color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">👥
+                        Ghost Employee Scrub</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Batch-hashing of payroll IDs to detect
+                        duplicate salaries going to the same person under different department names.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 20px; opacity: 0.7;">
+                    <h4 style="color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">🔀
+                        Fund Diversion Map</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Tracks funds moving between unrelated
+                        agency wallets, catching unauthorized reallocation of designated public money.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 20px; opacity: 0.7;">
+                    <h4 style="color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">♻️
+                        Kickback Loop Detector</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Identifies funds that circulate back to
+                        wallets associated with the awarding agency officials via side-contracts.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 20px; opacity: 0.7;">
+                    <h4 style="color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">🕵️
+                        Zero-Knowledge Proofs</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Verifies defense or sensitive spending
+                        amounts without exposing classified blueprints or strategic locations.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 20px; opacity: 0.7;">
+                    <h4 style="color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">💰
+                        Bounty Smart Contracts</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Automatically releases BTC/Token rewards to
+                        whistleblowers whose reported anomalies are confirmed by forensics.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 20px; opacity: 0.7;">
+                    <h4 style="color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">🗳️
+                        Public Veto Node</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Allows decentralized Civil Society
+                        Organizations (CSOs) to "Veto" a block if project completion is visibly fake.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 20px; opacity: 0.7;">
+                    <h4 style="color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">🛑
+                        Asset Recovery Kill-Switch</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Immediate on-chain freezing of contractor
+                        wallets if three forensic nodes reach consensus on a fraud signal.</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 20px; opacity: 0.7;">
+                    <h4 style="color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">🗺️
+                        District Spend Heatmap</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Visualizes budget density per square
+                        kilometer to detect over-concentration of funds in "politically favored" districts.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="notification-container"></div>
+
+    <script>
+        // Efficient Blockchain Logic
+        class Block {
+            constructor(index, timestamp, data, previousHash = '') {
+                this.index = index;
+                this.timestamp = timestamp;
+                this.data = data;
+                this.dataString = JSON.stringify(data);
+                this.previousHash = previousHash;
+                this.nonce = 0;
+                this.hash = this.calculateHash();
+            }
+
+            calculateHash() {
+                // Fast non-blocking hash for web (safe for all unicode)
+                const str = this.index + this.previousHash + this.timestamp + this.dataString + this.nonce;
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                    hash |= 0;
+                }
+                return (hash >>> 0).toString(16).padStart(8, '0') + this.previousHash.substring(0, 8);
+            }
+
+            async mineBlock(difficulty) {
+                const target = "0".repeat(difficulty);
+                const maxSafetyAttempts = 10000;
+                let attempts = 0;
+
+                return new Promise(resolve => {
+                    const solve = () => {
+                        // Mine in batches
+                        for (let i = 0; i < 500; i++) {
+                            if (this.hash.substring(0, difficulty) === target || attempts > maxSafetyAttempts) {
+                                resolve();
+                                return;
+                            }
+                            this.nonce++;
+                            attempts++;
+                            this.hash = this.calculateHash();
+                        }
+                        requestAnimationFrame(solve);
+                    };
+                    solve();
+                });
+            }
+        }
+
+        class Blockchain {
+            constructor() {
+                this.chain = [this.createGenesisBlock()];
+                this.difficulty = 1;
+            }
+
+            createGenesisBlock() {
+                return new Block(0, "01/01/2026", { type: "System", dept: "National Treasury", amount: 0, remarks: "GAA 2026 Genesis" }, "0");
+            }
+
+            getLatestBlock() {
+                return this.chain[this.chain.length - 1];
+            }
+
+            async addBlock(newBlock) {
+                newBlock.previousHash = this.getLatestBlock().hash;
+                await newBlock.mineBlock(this.difficulty);
+                this.chain.push(newBlock);
+                return newBlock;
+            }
+        }
+
+        const budgetChain = new Blockchain();
+        let currentAllocated = 1240000000;
+
+        const depts = {
+            'DA': { name: 'Agriculture', color: '#10b981' },
+            'DBM': { name: 'Budget', color: '#4b5563' },
+            'DepEd': { name: 'Education', color: '#2563eb' },
+            'DOE': { name: 'Energy', color: '#f59e0b' },
+            'DENR': { name: 'Environment', color: '#059669' },
+            'DOF': { name: 'Finance', color: '#1e40af' },
+            'DFA': { name: 'Foreign Affairs', color: '#3b82f6' },
+            'DOH': { name: 'Health', color: '#ef4444' },
+            'DHSUD': { name: 'Housing', color: '#d97706' },
+            'DILG': { name: 'Local Govt', color: '#9333ea' },
+            'DOJ': { name: 'Justice', color: '#7f1d1d' },
+            'DOLE': { name: 'Labor', color: '#0891b2' },
+            'DND': { name: 'Defense', color: '#1e3a8a' },
+            'DPWH': { name: 'Infrastructure', color: '#ea580c' },
+            'DOST': { name: 'Science', color: '#0d9488' },
+            'DSWD': { name: 'Social Welfare', color: '#dc2626' },
+            'DOT': { name: 'Tourism', color: '#db2777' },
+            'DTI': { name: 'Trade', color: '#4f46e5' },
+            'DOTr': { name: 'Transport', color: '#2563eb' },
+            'COA': { name: 'Audit', color: '#475569' },
+            'CSC': { name: 'Civil Service', color: '#64748b' },
+            'COMELEC': { name: 'Elections', color: '#b91c1c' },
+            'OP': { name: 'Office of Pres.', color: '#1e293b' },
+            'OVP': { name: 'Office of VP', color: '#334155' },
+            'NEDA': { name: 'NEDA', color: '#0284c7' },
+            'DICT': { name: 'Technology', color: '#06b6d4' }
+        };
+
+        function formatCurrency(num) {
+            if (num >= 1e12) return '₱ ' + (num / 1e12).toFixed(3) + 'T';
+            if (num >= 1e9) return '₱ ' + (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return '₱ ' + (num / 1e6).toFixed(2) + 'M';
+            return '₱ ' + num.toLocaleString();
+        }
+
+        function createBlockUI(block, isLatest) {
+            const blockEl = document.createElement('div');
+            const transactions = Array.isArray(block.data) ? block.data : [block.data];
+            const hasCriticalRisk = transactions.some(tx => tx.risk === 'CRITICAL');
+
+            blockEl.className = 'block' + (isLatest ? ' latest-block' : '') + (hasCriticalRisk ? ' lockdown' : '');
+
+            blockEl.innerHTML = `
+                ${hasCriticalRisk ? `
+                    <div class="lockdown-overlay">
+                        <div class="lockdown-badge">🛡️ FORENSIC LOCKDOWN</div>
+                        <div style="font-size: 0.5rem; color: #ef4444; font-weight: 800; margin-top: 4px;">UNDER AML INVESTIGATION</div>
+                    </div>
+                ` : ''}
+                <div class="block-header">
+                    <span class="block-number">BLOCK #${block.index}</span>
+                    <span class="block-ts">${block.timestamp}</span>
+                </div>
+                <div class="hash-label">PREVIOUS HASH</div>
+                <div class="hash-value">${block.previousHash.substring(0, 16)}...</div>
+                <div class="hash-label">BLOCK HASH</div>
+                <div class="hash-value" style="background: #e0f2fe; color: #0369a1;">${block.hash.substring(0, 16)}...</div>
+                
+                <div class="block-transactions">
+                    ${transactions.map(tx => `
+                        <div class="tx-item" style="flex-wrap: wrap;">
+                            <div style="width: 100%; display: flex; justify-content: space-between;">
+                                <span class="tx-dept" style="color: ${depts[tx.dept]?.color || '#1e293b'}">${tx.dept || 'SYS'}</span>
+                                <span class="tx-amount">${tx.amount > 0 ? formatCurrency(tx.amount) : '---'}</span>
+                            </div>
+                            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                                <div class="risk-badge" style="background: ${getRiskColor(tx.risk)}; color: white;" title="${(tx.reasons || []).join(', ')}">AI RISK: ${tx.risk || 'LOW'}</div>
+                                <span style="font-size: 0.6rem; font-family: 'JetBrains Mono'; opacity: 0.6;">VAL: SEC. ${tx.dept}</span>
+                            </div>
+                            <div style="width: 100%; font-size: 0.6rem; color: var(--text-muted); margin-top: 4px; display: flex; gap: 8px;">
+                                <span>🏗️ ${tx.contractor || 'Public Works'}</span>
+                                <span>🖼️ IMG: ${tx.evidenceHash ? tx.evidenceHash.substring(0, 8) : 'N/A'}</span>
+                            </div>
+                            <div style="width: 100%; font-size: 0.55rem; color: #ef4444; margin-top: 2px;">
+                                ${tx.reasons && tx.reasons.length > 0 ? '⚠️ ' + tx.reasons.join(' | ') : ''}
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; margin-top: 6px;">
+                                <div class="meta-tag">🗺️ GPS: ${tx.geotag || '14.5995, 120.9842'}</div>
+                                <div class="meta-tag">👁️ WATCHDOG: ${tx.watchdog || 'VERIFIED'}</div>
+                            </div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 4px; width: 100%; font-style: italic;">
+                                Provision: GAA-2025-SEC-${Math.floor(Math.random() * 99) + 1}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 0.6rem; color: var(--text-muted);">CONSENSUS: <span style="color: var(--success)">TRIPLE-SIGN (DBM/COA/WATCHDOG)</span></div>
+                    <div style="width: 30px; height: 30px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: help;" title="Government Proof-of-Asset QR">📱</div>
+                </div>
+            `;
+
+            return blockEl;
+        }
+
+        // HIGH-FREQUENCY TRAFFIC GENERATOR
+        let trafficActive = false;
+        let trafficInterval;
+        let pendingTxs = [];
+
+        async function processBatch() {
+            if (pendingTxs.length === 0) return;
+
+            const batch = [...pendingTxs];
+            pendingTxs = [];
+
+            const newBlock = new Block(
+                budgetChain.chain.length,
+                new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
+                batch
+            );
+
+            await budgetChain.addBlock(newBlock);
+
+            let batchTotal = 0;
+            batch.forEach(tx => {
+                if (tx.type !== 'Audit') batchTotal += tx.amount;
+            });
+            currentAllocated += batchTotal;
+
+            updateUI(newBlock);
+            updateLedger(batch);
+            updateAnalytics();
+            addFeedLog(`Block #${newBlock.index} mined with ${batch.length} transactions. Volume: ${formatCurrency(batchTotal)}`);
+        }
+
+        function generateFakeTx() {
+            const keys = Object.keys(depts);
+            const dept = keys[Math.floor(Math.random() * keys.length)];
+            const typeRange = ['Disbursement', 'Disbursement', 'Allocation', 'Audit'];
+            const type = typeRange[Math.floor(Math.random() * typeRange.length)];
+            const amounts = [50000, 150000, 1200000, 50000000, 150000000];
+
+            const isCorruptSeed = Math.random();
+            let amount = type === 'Audit' ? 0 : amounts[Math.floor(Math.random() * amounts.length)];
+            let remarks = ['Road Repair Sector A', 'School Building Phase 2', 'Medical Supplies', 'Consultant Fee', 'Hardware Purchase'][Math.floor(Math.random() * 5)];
+            const contractors = ['Integrity Builders Inc.', 'Global Tech Solutions', 'Crony-Linked Const.', 'Quick-Fix Supplies'];
+            let contractor = contractors[Math.floor(Math.random() * contractors.length)];
+            let evidenceHash = 'hash_' + Math.floor(Math.random() * 999999);
+            let watchdog = 'CSO-VERIFIED';
+
+            // Archetype 1: Ghost Project (Repeat Exact Remark + Dept)
+            if (isCorruptSeed > 0.94) {
+                remarks = 'Basic Education Facilities & Schools Program';
+                evidenceHash = 'hash_fixed_evidence_101';
+            }
+            // Archetype 2: Split Contract (Sub-500k repetitive)
+            else if (isCorruptSeed > 0.88) {
+                amount = 495000;
+                contractor = 'Global Tech Solutions';
+                remarks = 'Miscellaneous Repair Services';
+            }
+            // Archetype 3: Multi-Billion Election Spike Simulation
+            else if (isCorruptSeed > 0.82) {
+                amount = 2500000000;
+                remarks = 'Urgent Social Assistance Fund (Emergency Release)';
+            }
+            // Archetype 4: Bot/Simulator Spoof Detection
+            else if (isCorruptSeed > 0.78) {
+                watchdog = 'SYNTHETIC_SIG_MATCH';
+                remarks = 'System Maintenance Entry (Bot Test)';
+            }
+
+            const geotag = `${(14.5 + Math.random()).toFixed(4)}, ${(120.9 + Math.random()).toFixed(4)}`;
+            const riskData = analyzeRisk(amount, remarks, dept, contractor, evidenceHash, watchdog);
+
+            return { dept, type, amount, remarks, risk: riskData.level, reasons: riskData.reasons, geotag, contractor, evidenceHash, watchdog };
+        }
+
+        function toggleTraffic() {
+            const btn = document.getElementById('traffic-btn');
+            trafficActive = !trafficActive;
+
+            if (trafficActive) {
+                btn.innerText = '🛑 STOP AUTO-TRAFFIC';
+                btn.style.background = 'var(--accent)';
+                trafficInterval = setInterval(() => {
+                    // Generate 1-5 transactions every 2 seconds
+                    const count = Math.floor(Math.random() * 5) + 1;
+                    for (let i = 0; i < count; i++) {
+                        pendingTxs.push(generateFakeTx());
+                    }
+                    if (pendingTxs.length >= 5) processBatch();
+                }, 2000);
+            } else {
+                btn.innerText = '⚡ START AUTO-TRAFFIC';
+                btn.style.background = 'var(--success)';
+                clearInterval(trafficInterval);
+                processBatch(); // Final flush
+            }
+        }
+
+        // UI UPDATE FUNCTIONS
+        function updateUI(newBlock = null) {
+            const container = document.getElementById('blockchain');
+            const totalGAA = 6326000000000;
+
+            document.getElementById('stat-allocated').innerText = formatCurrency(currentAllocated);
+            const pct = (currentAllocated / totalGAA) * 100;
+            document.getElementById('usage-pct').innerText = pct.toFixed(4);
+            const totalGauge = document.getElementById('total-gauge');
+            if (totalGauge) totalGauge.style.width = Math.min(pct, 100) + '%';
+
+            if (!newBlock) {
+                container.innerHTML = '';
+                budgetChain.chain.forEach((block, i) => {
+                    const isLatest = (i === budgetChain.chain.length - 1);
+                    container.appendChild(createBlockUI(block, isLatest));
+                    if (i < budgetChain.chain.length - 1) {
+                        const connector = document.createElement('div');
+                        connector.className = 'block-connector';
+                        connector.innerHTML = '➞';
+                        container.appendChild(connector);
+                    }
+                });
+            } else {
+                const prevLatest = container.querySelector('.latest-block');
+                if (prevLatest) prevLatest.classList.remove('latest-block');
+
+                if (budgetChain.chain.length > 1) {
+                    const connector = document.createElement('div');
+                    connector.className = 'block-connector';
+                    connector.innerHTML = '➞';
+                    container.appendChild(connector);
+                }
+
+                const blockEl = createBlockUI(newBlock, true);
+                container.appendChild(blockEl);
+                container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+            }
+        }
+
+        function updateLedger(newBatch = null) {
+            const list = document.getElementById('ledger-list');
+            if (!list) return;
+
+            const createTxEl = (tx, blockIdx, ts) => {
+                if (tx.type === "System") return null;
+                const div = document.createElement('div');
+                div.className = 'ledger-tx';
+                let iconClass = 'tx-type-alloc';
+                let iconText = 'A';
+                if (tx.type === 'Disbursement') { iconClass = 'tx-type-disb'; iconText = 'D'; }
+                if (tx.type === 'Audit') { iconClass = 'tx-type-audit'; iconText = 'C'; }
+
+                div.innerHTML = `
+                    <div class="tx-icon ${iconClass}">${iconText}</div>
+                    <div class="tx-info">
+                        <h4>${tx.remarks}</h4>
+                        <p>${tx.dept} • Block #${blockIdx} • ${ts}</p>
+                    </div>
+                    <div class="tx-value">
+                        <div class="${tx.type === 'Audit' ? 'text-muted' : 'tx-amount'}">${tx.type === 'Audit' ? 'VERIFIED' : formatCurrency(tx.amount)}</div>
+                    </div>
+                `;
+                return div;
+            };
+
+            if (!newBatch) {
+                list.innerHTML = '';
+                const allTxs = [];
+                budgetChain.chain.forEach(block => {
+                    const txs = Array.isArray(block.data) ? block.data : [block.data];
+                    txs.forEach(t => allTxs.push({ ...t, ts: block.timestamp, index: block.index }));
+                });
+                allTxs.reverse().slice(0, 100).forEach(tx => {
+                    const el = createTxEl(tx, tx.index, tx.ts);
+                    if (el) list.appendChild(el);
+                });
+            } else {
+                const batch = Array.isArray(newBatch) ? newBatch : [newBatch];
+                const blockIdx = budgetChain.chain.length - 1;
+                const ts = budgetChain.getLatestBlock().timestamp;
+                [...batch].reverse().forEach(tx => {
+                    const el = createTxEl(tx, blockIdx, ts);
+                    if (el) list.insertBefore(el, list.firstChild);
+                });
+                while (list.children.length > 100) list.removeChild(list.lastChild);
+            }
+        }
+
+        // GLOBAL APP LOGIC
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('theme-btn');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                btn.innerHTML = '<span>🌙 DARK MODE</span>';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                btn.innerHTML = '<span>☀️ LIGHT MODE</span>';
+            }
+        }
+
+        document.getElementById('tx-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const dept = document.getElementById('dept-select').value;
+            const type = document.getElementById('type-select').value;
+            const amount = parseFloat(document.getElementById('amount-input').value);
+            const remarks = document.getElementById('remarks-input').value;
+            const overlay = document.getElementById('mining-overlay');
+            overlay.style.display = 'flex';
+
+            try {
+                const startTime = Date.now();
+                const geotag = `${(14.5 + Math.random()).toFixed(4)}, ${(120.9 + Math.random()).toFixed(4)}`;
+                const riskData = analyzeRisk(amount, remarks, dept);
+                const risk = riskData.level;
+                const reasons = riskData.reasons;
+
+                await simulateForensicVerification();
+
+                const newBlock = new Block(
+                    budgetChain.chain.length,
+                    new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
+                    [{ dept, type, amount, remarks, risk, reasons, geotag, watchdog: 'CSO-VERIFIED' }]
+                );
+
+                await budgetChain.addBlock(newBlock);
+                if (risk === 'CRITICAL' || risk === 'HIGH') triggerSentinelAlert(remarks, reasons);
+                const elapsed = Date.now() - startTime;
+                if (elapsed < 800) await new Promise(r => setTimeout(r, 800 - elapsed));
+                if (type !== 'Audit') currentAllocated += amount;
+
+                document.getElementById('tx-form').reset();
+                updateUI(newBlock);
+                updateLedger(newBlock.data);
+                updateAnalytics();
+                addFeedLog(`Verified Block #${newBlock.index}. Anti-corruption hashes synced.`);
+                if (amount > 1e9) smartContractRelease(amount);
+            } catch (err) {
+                console.error("Blockchain Error:", err);
+                addFeedLog(`ERROR: Forensic match failed. Disbursement withheld.`);
+            } finally {
+                overlay.style.display = 'none';
+                resetNodes();
+            }
+        });
+
+        let recoveryTotal = 0;
+        let anomaliesCount = 0;
+
+        function getRiskColor(risk) {
+            if (risk === 'CRITICAL' || risk === 'HIGH') return 'var(--risk-high)';
+            if (risk === 'MID') return 'var(--risk-mid)';
+            return 'var(--risk-low)';
+        }
+
+        async function simulateForensicVerification() {
+            const nodes = ['dbm', 'coa', 'btr', 'agency'];
+            for (const node of nodes) {
+                const el = document.getElementById(`node-${node}`);
+                if (el) el.classList.add('active');
+                await new Promise(r => setTimeout(r, 200));
+            }
+        }
+
+        function analyzeRisk(amount, remarks, dept = '', contractor = '', evidenceHash = '', watchdog = '') {
+            const suspiciousKeywords = ['urgent', 'confidential', 'miscellaneous', 'other', 'travel', 'discretionary'];
+            const upperRemarks = (remarks || '').toLowerCase();
+            let score = 0;
+            let reasons = [];
+
+            if (amount > 1000000000) { score += 3; reasons.push('ALARM: Extreme Fund Release'); }
+
+            suspiciousKeywords.forEach(word => {
+                if (upperRemarks.includes(word)) {
+                    score += 1;
+                    reasons.push(`Flag: ${word}`);
+                }
+            });
+
+            // Simulator/Bot Spoofing Detection
+            if (watchdog === 'SYNTHETIC_SIG_MATCH') {
+                score += 10;
+                reasons.push('FORENSIC: SIMULATOR/BOT SPOOF DETECTED');
+            }
+
+            // Memory-based forensics
+            let dup = false;
+            let hashCol = false;
+            let split = false;
+
+            budgetChain.chain.forEach(block => {
+                const txs = Array.isArray(block.data) ? block.data : [block.data];
+                txs.forEach(t => {
+                    if (t.remarks === remarks && t.dept === dept && amount > 0) dup = true;
+                    if (t.evidenceHash === evidenceHash && amount > 0 && evidenceHash === 'hash_fixed_evidence_101') hashCol = true;
+                    if (t.dept === dept && t.contractor === contractor && amount === 495000) split = true;
+                });
+            });
+
+            if (dup) { score += 5; reasons.push('GHOST PROJECT DETECTED'); }
+            if (hashCol) { score += 6; reasons.push('EVIDENCE FRAUD (IMAGE HASH COLLISION)'); }
+            if (split) { score += 2; reasons.push('POTENTIAL SPLIT-CONTRACT'); }
+            if (contractor === 'Crony-Linked Const.') { score += 3; reasons.push('BLACKLISTED VENDOR'); }
+
+            let level = 'LOW';
+            if (score >= 6) level = 'CRITICAL';
+            else if (score >= 4) level = 'HIGH';
+            else if (score >= 2) level = 'MID';
+            return { level, reasons };
+        }
+
+        function triggerSentinelAlert(remarks, reasons = []) {
+            anomaliesCount++;
+            const elA = document.getElementById('sentinel-anomalies');
+            if (elA) elA.innerText = anomaliesCount;
+
+            const recovered = Math.floor(Math.random() * 10000000) + 5000000;
+            recoveryTotal += recovered;
+            const elR = document.getElementById('sentinel-recovery');
+            if (elR) elR.innerText = formatCurrency(recoveryTotal);
+
+            const flog = document.getElementById('forensic-log');
+            if (flog) {
+                const p = document.createElement('p');
+                p.style.marginBottom = '4px';
+                p.innerHTML = `<span style="font-weight:bold;">[ALERT]</span> ${reasons[0] || 'INTERCEPTED'}: ${remarks.substring(0, 30)}...`;
+                flog.prepend(p);
+            }
+
+            addFeedLog(`SENTINEL: Forensic anomaly intercepted! Recovery initiated.`);
+            showNotification(reasons[0] || 'Fraud Detected', remarks);
+        }
+
+        function showNotification(title, msg) {
+            const container = document.getElementById('notification-container');
+            if (!container) return;
+            const n = document.createElement('div');
+            n.className = 'fraud-alert';
+            n.innerHTML = `
+                <div class="fraud-alert-icon">🛡️</div>
+                <div>
+                    <h4>SENTINEL FORENSIC INTERCEPT</h4>
+                    <p><strong>${title}</strong>: ${msg.substring(0, 60)}...</p>
+                </div>
+            `;
+            container.appendChild(n);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                n.style.animation = 'slideOutRight 0.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                setTimeout(() => n.remove(), 500);
+            }, 5000);
+        }
+
+        function openWhistleblower() {
+            alert("🛡️ WHISTLEBLOWER PORTAL: Your encrypted report session has started on a secure node.");
+            addFeedLog("WHISTLEBLOWER: High-security report received.");
+        }
+
+        function filterLedger() {
+            const query = document.getElementById('ledger-search').value.toLowerCase();
+            const items = document.querySelectorAll('.ledger-tx');
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                item.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function exportLedger() {
+            alert('Ledger Exported: budget_chain_audit_' + Date.now() + '.csv');
+        }
+
+        function updateAnalytics() {
+            const chart = document.getElementById('dept-chart');
+            if (!chart) return;
+            chart.innerHTML = '';
+            const totals = {};
+            budgetChain.chain.forEach(b => {
+                const txs = Array.isArray(b.data) ? b.data : [b.data];
+                txs.forEach(t => {
+                    if (t.dept && t.amount > 0) {
+                        totals[t.dept] = (totals[t.dept] || 0) + t.amount;
+                    }
+                });
+            });
+            const max = Math.max(...Object.values(totals), 1);
+            Object.keys(totals).forEach(deptKey => {
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                const height = (totals[deptKey] / max) * 100;
+                bar.style.height = height + '%';
+                bar.style.background = depts[deptKey]?.color || '#cbd5e1';
+                bar.setAttribute('data-label', `${deptKey}: ${formatCurrency(totals[deptKey])}`);
+                chart.appendChild(bar);
+            });
+        }
+
+        function addFeedLog(msg) {
+            const feed = document.getElementById('status-feed');
+            if (!feed) return;
+            const log = document.createElement('p');
+            log.innerText = `> ${new Date().toLocaleTimeString()}: ${msg}`;
+            feed.appendChild(log);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function resetNodes() {
+            document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+        }
+
+        function smartContractRelease(amount) {
+            if (amount > 1e9) addFeedLog(`ALERT: Multi-sig release triggered for > 1B.`);
+        }
+
+        // Intervals for simulation
+        setInterval(() => {
+            const lat = Math.floor(Math.random() * 25) + 5;
+            const el = document.getElementById('net-lat');
+            if (el) el.innerText = lat;
+        }, 3000);
+
+        setInterval(() => {
+            if (Math.random() > 0.7) {
+                const blockId = Math.floor(Math.random() * budgetChain.chain.length);
+                addFeedLog(`Audit Bot verified Block #${blockId} integrity.`);
+            }
+        }, 10000);
+
+        setInterval(() => {
+            const peers = Math.floor(Math.random() * 4) + 6;
+            const el = document.getElementById('net-peers');
+            if (el) el.innerText = `${peers} Nodes Connected`;
+        }, 8000);
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.block')) {
+                const bnum = e.target.closest('.block').querySelector('.block-number');
+                if (bnum) {
+                    addFeedLog(`Opening Explorer for ${bnum.innerText}... Full Merkle Proof loaded.`);
+                }
+            }
+        });
+
+        async function init() {
+            const dateStr = "02/23/2025, 08:30:00 AM";
+            const samples = [
+                { dept: 'DepEd', type: 'Allocation', amount: 1055000000000, remarks: 'Basic Education Facilities & Schools Program', risk: 'LOW' },
+                { dept: 'DPWH', type: 'Allocation', amount: 1007000000000, remarks: 'Build Better More: Connectivity Infrastructure', risk: 'LOW' },
+                { dept: 'DOH', type: 'Allocation', amount: 267800000000, remarks: 'Health Facilities Enhancement Program (HFEP)', risk: 'LOW' },
+                { dept: 'DSWD', type: 'Allocation', amount: 217500000000, remarks: 'Pantawid Pamilyang Pilipino Program (4Ps)', risk: 'LOW' },
+                { dept: 'DA', type: 'Allocation', amount: 237400000000, remarks: 'National Rice & Corn Food Security Programs', risk: 'LOW' },
+                { dept: 'COA', type: 'Audit', amount: 0, remarks: 'Annual Audit Report - Integrity Verification Match', risk: 'LOW' }
+            ];
+
+            currentAllocated = 0;
+            for (const s of samples) {
+                const b = new Block(budgetChain.chain.length, dateStr, [s]);
+                b.previousHash = (budgetChain.chain.length > 0) ? budgetChain.getLatestBlock().hash : "0";
+                budgetChain.chain.push(b);
+                if (s.type !== 'Audit') currentAllocated += s.amount;
+            }
+
+            updateUI();
+            updateLedger();
+            updateAnalytics();
+            addFeedLog("GAA 2025 Ledger Initialized. Node Status: Synchronized.");
+            toggleTraffic();
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
